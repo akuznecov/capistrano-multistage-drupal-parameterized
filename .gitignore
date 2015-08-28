@@ -2,3 +2,13 @@
 Gemfile.lock
 vagrant-eco.rb
 vagrant.rb
+
+config/local/*
+!config/local/default.local.rb
+log/*
+!log/.placeholder
+copy_tmp_dir/*
+!copy_tmp_dir/.placeholder
+copy_cache/*
+!copy_cache/.placeholder
+

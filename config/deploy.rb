@@ -1,8 +1,7 @@
 # avoid next names for stages: "stage", "test"
 # it could conflict with Ruby and Capistrano method names
 
-set :stages, ["preprod", "prod"]
-set :default_stage, "preprod"
+set :stages, %w[prod preprod]
 require 'capistrano/ext/multistage'
 
 set :application, ""
@@ -35,6 +34,7 @@ set :scm_username,          "git"
 set :synchronous_connect,   true
 
 set :copy_dir,    "copy_tmp_dir"
+set :copy_cache,  "copy_cache/#{application}"
 set :temp_dir,    "tmp"
 set :temp_folder, "/tmp"
 
@@ -94,3 +94,30 @@ def remote_file_exists?(path)
 end
 
 Dir['config/deploy/recipes/*.rb'].each { |recipe| load(recipe) }
+
+deployment_command_arguments_full = ARGV.clone
+deployment_command_arguments = deployment_command_arguments_full.clone
+if deployment_command_arguments[0].nil? or not stages.include? deployment_command_arguments[0]
+  raise CommandError.new("Wrong stage specified")
+end
+if deployment_command_arguments[1].nil?
+  raise CommandError.new("No command specified")
+end
+deployment_command_arguments.delete_at(0)
+deployment_task = deployment_command_arguments.detect { |a| a.to_s !~ /\A-/ && a.to_s !~ /=/ }
+set :deployment_task_not_sanitized, deployment_task
+deployment_task = deployment_task.gsub(/[^\w\s]/, '_')
+
+at_exit do
+  unless File.directory?("log/")
+    FileUtils.mkdir("log/")
+  end
+  reference_log_string = ""
+  unless reference.empty?
+    reference_log_string = "_#{reference}"
+  end
+  deployment_logfile = "log/#{release_name}_#{stage}_#{deployment_task}#{reference_log_string}.log"
+  File.write(deployment_logfile, "Command arguments: #{deployment_command_arguments_full.join(' ')}\n" )
+  File.write(deployment_logfile, full_log, mode: 'a')
+  logger.info("Deployment log saved into #{File.expand_path(deployment_logfile)}")
+end

@@ -1,3 +1,6 @@
+require 'capistrano/log_with_awesome'
+require 'fileutils'
+
 load 'deploy'
 # Uncomment if you are using Rails' asset pipeline
     # load 'deploy/assets'
