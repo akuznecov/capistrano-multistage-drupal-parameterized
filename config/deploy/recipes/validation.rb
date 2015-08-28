@@ -30,12 +30,12 @@ task :git do
 
   raise CommandError.new("Reference not defined. Please specify it with reference=TAG (TAG should be provided by developer)") if reference.empty?
 
-  if reference =~ /\b[0-9a-f]{5,40}\b/
+  if reference =~ /\A(([0-9a-f]{40})|([0-9a-f]{6,8}))\z/
     logger.info("Reference matched SHA1 hash")
     logger.info("We are unable to check if this commit present on remote repository")
     set :branch, reference
   else 
-    gitref = `git ls-remote #{repository} | grep -v '\\^{}' | grep -F #{reference}`
+    gitref = `git ls-remote #{repository} | grep -v '\\^{}' | grep "/#{reference}$"`
     if not gitref.empty?
       if gitref.match('tag')
         logger.info("Reference found as tag. Falling back to SHA1 hash to support Git < 1.7.10")
